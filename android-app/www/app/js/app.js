@@ -1,4 +1,4 @@
-/* SaveBox v1.5.6 — main app logic (MEGA cloud files only) */
+/* SaveBox v1.5.7 — main app logic (MEGA cloud files only) */
 (function () {
   'use strict';
   var D = window.SaveBoxDB;
@@ -194,7 +194,7 @@
       return;
     }
     openModal(modalHead('Google Sign-In needs Firebase') +
-      '<p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Google Sign-In is a cloud feature. This version of SaveBox (v1.5.6) stores accounts on this device only, so Google Sign-In is not available yet.</p>' +
+      '<p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Google Sign-In is a cloud feature. This version of SaveBox (v1.5.7) stores accounts on this device only, so Google Sign-In is not available yet.</p>' +
       '<p class="text-sm text-slate-600 dark:text-slate-300 mb-4">To enable it, connect a free Firebase project — see FIREBASE_SETUP.md in the SaveBox project folder (free, about 10 minutes, no payment). Once connected, this button signs you in with Google — no code changes needed.</p>' +
       '<button class="btn-primary w-full" type="button" onclick="SaveBoxUI.closeModal()">Got it</button>');
   }
@@ -779,8 +779,8 @@
         megaCloudHtml() + '</div>';
     }
     return '<div class="card p-5"><h2 class="font-bold text-lg mb-2">ℹ️ About SaveBox</h2>' +
-      '<p class="text-sm">SaveBox <b>v1.5.6</b> — Personal Cloud Storage &amp; Digital Locker.</p>' +
-      '<h3 class="font-bold mt-4 mb-1 text-sm">What works in v1.5.6</h3><ul class="text-sm list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-300">' +
+      '<p class="text-sm">SaveBox <b>v1.5.7</b> — Personal Cloud Storage &amp; Digital Locker.</p>' +
+      '<h3 class="font-bold mt-4 mb-1 text-sm">What works in v1.5.7</h3><ul class="text-sm list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-300">' +
       '<li>Save links (YouTube, Instagram, Facebook, TikTok, any website) with real metadata fetch</li>' +
       '<li>Upload files up to 50 MB each — your connected cloud is used first, this device only when every connected cloud is full</li>' +
       '<li>Notes, folders &amp; subfolders, favourites, trash, multi-select, search &amp; filters</li>' +
@@ -795,6 +795,7 @@
       '<li>Pink theme in v1.5.4 — buttons, links and highlights are now pink on the same dark theme.</li>' +
       '<li>Blue theme restored in v1.5.5 — the original blue colours are back (pink removed).</li>' +
       '<li>App icon in v1.5.6 — the SaveBox shield is now the APK launcher icon (and the Add-to-Home-Screen icon).</li>' +
+      '<li>Google Sign-In in v1.5.7 — in the installed app, “Continue with Google” now opens the Google account chooser INSIDE the app (no Chrome, no localhost error); on the website the sign-in flow is unchanged.</li>' +
       '<li>MEGA login asks about two-step authentication first — pick “No 2FA” to log in without a code, or “2FA is on” to enter your 6-digit code; new to MEGA? A link to mega.nz sits under the login form.</li>' +
       (window.FIREBASE_ENABLED ? '<li>Firebase connected — Google Sign-In + Firestore sync (folders, links &amp; notes).</li>' : '') +
       (window.R2_ENABLED ? '<li>Cloud files on Cloudflare R2 (10 GB free) — uploads go to your private bucket when signed in.</li>' : '') + '</ul>' +
@@ -807,7 +808,7 @@
       '<li>On the native Android app, fingerprint can also use BiometricPrompt (Phase 6)</li>' +
       '<li>Some websites block metadata fetching — you can always enter the title manually</li>' +
       '<li>Backups skip files over 10 MB (re-upload those manually after restore)</li></ul>' +
-      '<p class="text-xs text-slate-400 mt-4">Made for somya • Free • v1.5.6</p></div>';
+      '<p class="text-xs text-slate-400 mt-4">Made for somya • Free • v1.5.7</p></div>';
   }
 
   /* ---------- event binding for the current view ---------- */

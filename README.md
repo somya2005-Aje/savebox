@@ -8,7 +8,7 @@ safely, and lock private files with a PIN.
 **Live URL (after deploy):** https://savebox.pages.dev/
 **Stack:** vanilla HTML/CSS/JS + Tailwind via CDN. No build step, no framework.
 
-## What works in v1.5.6 (no setup needed)
+## What works in v1.5.7 (no setup needed)
 
 - **Auth** — register / sign in / sign out, device-local password recovery,
   profile edit, change password, account deletion (wipes that user's data).
@@ -229,6 +229,23 @@ Note: Gradle may fail in sandboxed environments because its daemon uses a
 loopback TCP socket that is blocked there. Build on a real machine instead.
 
 ## Version
+
+v1.5.7 — 24 Nov 2026 (Google Sign-In now happens INSIDE the installed app
+by user order: the web `signInWithRedirect` flow opened Chrome and the
+return URL https://localhost/… only exists inside the APK WebView, so Chrome
+showed ERR_CONNECTION_REFUSED. The APK now uses @capacitor-firebase/
+authentication v8.6.0 — `FirebaseAuthentication.signInWithGoogle()` shows
+the native Google account chooser in-app, and the ID token is exchanged with
+the compat SDK, so login/signup/link/sync are unchanged. The website keeps
+the popup → redirect flow. A persistent DEBUG keystore
+(`android-app/android/app/debug.keystore`, SHA-1
+E4:2A:6D:03:A4:01:6E:EE:51:1E:E1:12:89:DC:EB:B0:72:A9:64:E2) is committed to
+the repo so the APK signature — and the Firebase SHA-1 — never change
+between Actions builds. **v1.5.7 APK release is pending the Firebase console
+step**: register the Android app (package com.savebox.app) with this SHA-1
+and place google-services.json at android-app/android/app/ — see
+FIREBASE_SETUP.md. Until then the v1.5.6 APK above stays the current
+download. VersionCode 157.)
 
 v1.5.6 — 24 Nov 2026 (App launcher icon by user order: the SaveBox shield
 (blue #1769AA/#2F8FE5 + white cloud/check + gold dot on navy #102A43) is now

@@ -1,4 +1,4 @@
-/* SaveBox v1.5.3 — Firebase cloud layer (compat SDK, loaded via CDN)
+/* SaveBox v1.5.7 — Firebase cloud layer (compat SDK, loaded via CDN)
  *
  * This file is ONLY active when window.FIREBASE_ENABLED is true, i.e. when
  * a real config has been pasted into js/firebase-config.js. With the
@@ -15,6 +15,18 @@
  *    source of truth for metadata.
  *  - Storage: file blobs under files/{uid}/{itemId}; download URLs are
  *    used as a fallback when a file is not on this device.
+ *
+ * v1.5.7 — NATIVE Google Sign-In inside the Android APK. The web
+ * signInWithRedirect flow navigates away from the Capacitor WebView:
+ * Capacitor hands the Google auth page to the system browser (Chrome),
+ * and the return URL is the app's own origin https://localhost/…, which
+ * only exists inside the WebView — so Chrome shows ERR_CONNECTION_REFUSED.
+ * On native, signInWithGoogle() now uses @capacitor-firebase/authentication
+ * (FirebaseAuthentication.signInWithGoogle — the in-app Google account
+ * chooser, no browser at all) and exchanges the returned ID token with
+ * the compat SDK (signInWithCredential), so the rest of the app —
+ * linkFirebaseUser, onAuth, sync — works unchanged. On the website the
+ * flow is untouched (popup → redirect fallback).
  */
 (function () {
   'use strict';
@@ -54,8 +66,49 @@
   }
 
   /* ---------- auth ---------- */
+
+  /* v1.5.7 — true only inside the installed APK (Capacitor WebView).
+   * The vendored js/capacitor.js defines window.Capacitor on every
+   * surface; isNativePlatform() is false on the website, true in the APK. */
+  function isNativePlatform() {
+    try {
+      return typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform();
+    } catch (e) { return false; }
+  }
+
+  /* The @capacitor-firebase/authentication plugin object (vendored UMD
+   * bundle js/firebase-auth-plugin.js registers it as
+   * window.capacitorFirebaseAuthentication.FirebaseAuthentication). */
+  function nativeAuthPlugin() {
+    try {
+      var g = window.capacitorFirebaseAuthentication;
+      return (g && g.FirebaseAuthentication) || null;
+    } catch (e) { return null; }
+  }
+
   function signInWithGoogle() {
     return needReady().then(function () {
+      if (isNativePlatform()) {
+        /* In-app Google sign-in: the plugin shows the native Google
+         * account chooser inside the app — no browser navigation, so the
+         * localhost redirect that broke v1.5.6 can never happen. The ID
+         * token is then exchanged with the compat SDK, exactly like a
+         * web sign-in, so linkFirebaseUser / onAuth / sync are unchanged.
+         * Requires google-services.json + the Android app registered in
+         * the Firebase console with this build's SHA-1 (see
+         * FIREBASE_SETUP.md); without it the plugin rejects and the
+         * caller shows a plain error — never a Chrome redirect. */
+        var plugin = nativeAuthPlugin();
+        if (!plugin || !plugin.signInWithGoogle) {
+          return Promise.reject(new Error('Google Sign-In is not available in this app build yet.'));
+        }
+        return plugin.signInWithGoogle().then(function (res) {
+          var idToken = res && res.credential && res.credential.idToken;
+          if (!idToken) throw new Error('Google Sign-In did not return an ID token.');
+          var credential = firebase.auth.GoogleAuthProvider.credential(idToken);
+          return FB.auth.signInWithCredential(credential).then(function (cred) { return cred.user; });
+        });
+      }
       var provider = new firebase.auth.GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
       return FB.auth.signInWithPopup(provider).then(function (cred) { return cred.user; }).catch(function (err) {
@@ -235,6 +288,7 @@
     get ready() { return FB.ready; },
     get projectId() { return FB.projectId; },
     init: init,
+    isNativePlatform: isNativePlatform,
     signInWithGoogle: signInWithGoogle,
     signInWithEmail: signInWithEmail,
     registerWithEmail: registerWithEmail,

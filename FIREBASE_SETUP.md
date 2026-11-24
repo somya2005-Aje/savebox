@@ -175,3 +175,42 @@ charging you — nothing is billed on the Spark plan.
   field in `firebase-config.js` is filled (especially `apiKey` and
   `projectId`), save, and re-deploy.
 - **Google Sign-In popup blocked** — allow popups for your SaveBox domain.
+- **APK: "Continue with Google" opens Chrome and Chrome shows
+  "localhost refused to connect" (ERR_CONNECTION_REFUSED)** — fixed in
+  v1.5.7: the APK uses the native in-app Google account chooser
+  (@capacitor-firebase/authentication), no browser at all. If it still
+  happens, the installed APK is older than v1.5.7 — uninstall it and
+  install v1.5.7+.
+
+## Step 7 — Register the Android app (v1.5.7, APK only)
+
+The installed APK needs its own Firebase Android app, otherwise the native
+Google Sign-In has no OAuth client and fails. The web app does not need
+this step.
+
+1. Sign in to https://console.firebase.google.com/ with
+   **ajedharua@gmail.com** (the account that owns project **SaveBox** /
+   `savebox-f0b65` — do NOT use branjandharua7@gmail.com).
+2. Open project **SaveBox** → ⚙️ **Project settings** → **Your apps** →
+   **Add app** → **Android** (the Android robot icon).
+3. **Android package name:** `com.savebox.app`
+   **App nickname:** `SaveBox Android`
+   **Debug signing certificate SHA-1:**
+   `E4:2A:6D:03:A4:01:6E:EE:51:1E:E1:12:89:DC:EB:B0:72:A9:64:E2`
+   (this is the SHA-1 of the persistent debug keystore committed at
+   `android-app/android/app/debug.keystore` — it never changes between
+   builds, so this step is done once).
+4. Click **Register app**, then **Download google-services.json**.
+5. Place the downloaded file at
+   `android-app/android/app/google-services.json` in the repo (next to
+   `build.gradle`) and push — GitHub Actions rebuilds the APK with it.
+   The app's `build.gradle` already applies the Google Services plugin
+   whenever that file exists; no other change is needed.
+6. Confirm **Authentication → Sign-in method → Google** is still
+   **Enabled** (it already is — web Google Sign-In uses it).
+
+Why the SHA-1 matters: Google Sign-In on Android only works for apps
+signed with a certificate whose SHA-1 is registered here. The repo's debug
+keystore is the same on every build, so one registration covers all future
+APK releases. This is a DEBUG keystore only (standard android/android
+credentials) — never use it as a release keystore.

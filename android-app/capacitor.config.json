@@ -1,1 +1,1 @@
-{"appId":"com.savebox.app","appName":"SaveBox","webDir":"www"}
+{"appId":"com.savebox.app","appName":"SaveBox","plugins":{"FirebaseAuthentication":{"providers":["google.com"]}},"webDir":"www"}

@@ -51,7 +51,7 @@ tailwind.config = { darkMode: 'class', theme: { extend: {
           <div class="hero-feat">🔒 <b>Private folder</b><span>PIN-locked, hidden from view</span></div>
           <div class="hero-feat">🔗 <b>Safe sharing</b><span>Expiry + password links</span></div>
         </div>
-        <p class="mt-6 text-sm text-slate-500 dark:text-slate-400">💡 v1.5.6 — connect MEGA in Settings → Cloud Sync and your files upload to the cloud (MEGA 20 GB free). Without a cloud connection, new files are stored on this device.</p>
+        <p class="mt-6 text-sm text-slate-500 dark:text-slate-400">💡 v1.5.7 — connect MEGA in Settings → Cloud Sync and your files upload to the cloud (MEGA 20 GB free). Without a cloud connection, new files are stored on this device.</p>
       </section>
 
       <!-- Auth card -->
@@ -99,7 +99,7 @@ tailwind.config = { darkMode: 'class', theme: { extend: {
         </form>
       </section>
     </div>
-    <p class="text-center text-xs text-slate-400 mt-10">SaveBox v1.5.6 • Free • Cloud files on MEGA (20 GB free) once you connect it.</p>
+    <p class="text-center text-xs text-slate-400 mt-10">SaveBox v1.5.7 • Free • Cloud files on MEGA (20 GB free) once you connect it.</p>
   </div>
 </div>
 
@@ -111,7 +111,7 @@ tailwind.config = { darkMode: 'class', theme: { extend: {
       <div class="flex items-center gap-2 px-2 py-2">
         <span id="logoSide"></span>
         <span class="text-xl font-extrabold text-navy dark:text-white">Save<span class="text-electric">Box</span></span>
-        <span class="ml-auto text-[10px] font-bold bg-gold/20 text-yellow-700 dark:text-gold px-2 py-0.5 rounded-full">v1.5.6</span>
+        <span class="ml-auto text-[10px] font-bold bg-gold/20 text-yellow-700 dark:text-gold px-2 py-0.5 rounded-full">v1.5.7</span>
       </div>
       <button id="sideSaveBtn" class="btn-primary w-full mt-4">＋ Save Link</button>
       <button id="sideUploadBtn" class="btn-outline w-full mt-2">⬆ Upload File</button>
@@ -157,6 +157,18 @@ tailwind.config = { darkMode: 'class', theme: { extend: {
 <input type="file" id="hiddenFileInput" class="hidden" multiple>
 <input type="file" id="photoInput" class="vh-input" accept="image/*" tabindex="-1" aria-hidden="true">
 
+<!-- Capacitor bridge (v1.5.7) — ONLY used inside the Android APK. On the
+     website these files load harmlessly (isNativePlatform() is false and
+     the plugin is never called). capacitor.js defines window.Capacitor;
+     firebase-auth-plugin.js is the @capacitor-firebase/authentication
+     UMD bundle — its factory needs a `firebaseAuthExports` global, so we
+     stub it: on native the calls go through the Capacitor bridge and the
+     web implementation is never instantiated; on web the plugin is never
+     called at all (Google sign-in there keeps using the compat redirect
+     flow in js/firebase.js). -->
+<script src="js/capacitor.js"></script>
+<script>window.firebaseAuthExports = window.firebaseAuthExports || {};</script>
+<script src="js/firebase-auth-plugin.js"></script>
 <!-- Firebase SDK (compat v10) — only used when a real config is pasted into js/firebase-config.js -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
