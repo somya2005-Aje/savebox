@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "877557763090",
+    "project_id": "savebox-f0b65",
+    "storage_bucket": "savebox-f0b65.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:877557763090:android:740b6e11de51f9a2bc9ccb",
+        "android_client_info": {
+          "package_name": "com.savebox.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "877557763090-24l6rf4nujhqambb1jj25tsf3bcn04uv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.savebox.app",
+            "certificate_hash": "e42a6d03a4016eee511ee11289dcebb072a964e2"
+          }
+        },
+        {
+          "client_id": "877557763090-mt66sf5d121797tkaldo5i344gmju83r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7QdTDEW4wJuliRjEtzGsV3avc1-QtoXU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "877557763090-mt66sf5d121797tkaldo5i344gmju83r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
