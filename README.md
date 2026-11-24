@@ -1,6 +1,6 @@
 # SaveBox
 
-**Android APK (v1.5.5):** https://github.com/somya2005-Aje/savebox/releases/download/v1.5.5/savebox-v1.5.5.apk — download on your phone, allow "Install unknown apps" for Chrome if asked, tap Install (Play Protect may warn — tap Install anyway). Source repo: https://github.com/somya2005-Aje/savebox (public; APK rebuilt by GitHub Actions from `android-app/`). v1.5.5 — Personal Cloud Storage & Digital Locker
+**Android APK (v1.5.6):** https://github.com/somya2005-Aje/savebox/releases/download/v1.5.6/savebox-v1.5.6.apk — download on your phone, allow "Install unknown apps" for Chrome if asked, tap Install (Play Protect may warn — tap Install anyway). **If v1.5.5 is already installed, uninstall it first, then install v1.5.6** — a plain update can keep the old white launcher icon cached. Source repo: https://github.com/somya2005-Aje/savebox (public; APK rebuilt by GitHub Actions from `android-app/`). v1.5.6 — Personal Cloud Storage & Digital Locker
 
 Save links, files and notes in one safe place. Find them in seconds, share them
 safely, and lock private files with a PIN.
@@ -8,7 +8,7 @@ safely, and lock private files with a PIN.
 **Live URL (after deploy):** https://savebox.pages.dev/
 **Stack:** vanilla HTML/CSS/JS + Tailwind via CDN. No build step, no framework.
 
-## What works in v1.5.5 (no setup needed)
+## What works in v1.5.6 (no setup needed)
 
 - **Auth** — register / sign in / sign out, device-local password recovery,
   profile edit, change password, account deletion (wipes that user's data).
@@ -229,6 +229,12 @@ Note: Gradle may fail in sandboxed environments because its daemon uses a
 loopback TCP socket that is blocked there. Build on a real machine instead.
 
 ## Version
+
+v1.5.6 — 24 Nov 2026 (App launcher icon by user order: the SaveBox shield
+(blue #1769AA/#2F8FE5 + white cloud/check + gold dot on navy #102A43) is now
+the APK launcher icon in all densities + adaptive icon (navy background), and
+the web manifest (manifest.webmanifest + icon-192/512) fixes the
+Add-to-Home-Screen icon too. VersionCode 156.)
 
 v1.5.5 — 24 Nov 2026 (Blue theme restored by user order: the pink accent
 family (#DB2777 / #EC4899 / #F472B6) is reverted to the original blues
