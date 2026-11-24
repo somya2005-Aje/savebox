@@ -1,4 +1,6 @@
-# SaveBox v1.5.5 — Personal Cloud Storage & Digital Locker
+# SaveBox
+
+**Android APK (v1.5.5):** https://github.com/somya2005-Aje/savebox/releases/download/v1.5.5/savebox-v1.5.5.apk — download on your phone, allow "Install unknown apps" for Chrome if asked, tap Install (Play Protect may warn — tap Install anyway). Source repo: https://github.com/somya2005-Aje/savebox (public; APK rebuilt by GitHub Actions from `android-app/`). v1.5.5 — Personal Cloud Storage & Digital Locker
 
 Save links, files and notes in one safe place. Find them in seconds, share them
 safely, and lock private files with a PIN.
