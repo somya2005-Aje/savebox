@@ -1,7 +1,7 @@
-/* SaveBox v1.5.8 — main app logic (MEGA cloud files only) */
+/* SaveBox v1.5.9 — main app logic (MEGA cloud files only) */
 (function () {
   'use strict';
-  var APP_VERSION = '1.5.8'; // v1.5.8 — used by the in-app update check; bump with every release
+  var APP_VERSION = '1.5.9'; // v1.5.9 — used by the in-app update check; bump with every release
   var UPDATE_REPO = 'somya2005-Aje/savebox';
   var D = window.SaveBoxDB;
   var FBx = window.SaveBoxFirebase; // null-safe: firebase.js loads before app.js
@@ -268,7 +268,7 @@
       return;
     }
     openModal(modalHead('Google Sign-In needs Firebase') +
-      '<p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Google Sign-In is a cloud feature. This version of SaveBox (v1.5.8) stores accounts on this device only, so Google Sign-In is not available yet.</p>' +
+      '<p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Google Sign-In is a cloud feature. This version of SaveBox (v1.5.9) stores accounts on this device only, so Google Sign-In is not available yet.</p>' +
       '<p class="text-sm text-slate-600 dark:text-slate-300 mb-4">To enable it, connect a free Firebase project — see FIREBASE_SETUP.md in the SaveBox project folder (free, about 10 minutes, no payment). Once connected, this button signs you in with Google — no code changes needed.</p>' +
       '<button class="btn-primary w-full" type="button" onclick="SaveBoxUI.closeModal()">Got it</button>');
   }
@@ -582,7 +582,7 @@
     }
     return (state.updateAvailable ? '<div class="card p-4 mb-4 flex flex-wrap items-center gap-3" style="border-color:#1769AA">' +
       '<span class="text-2xl">⬆️</span><div class="flex-1 min-w-[12rem]"><p class="font-bold">Naya update available: ' + D.esc(state.updateAvailable.tag) + '</p>' +
-      '<p class="text-xs text-slate-500 dark:text-slate-400">Download karke install karo — v1.5.8 ya uske baad ke version se seedha update ho jata hai, uninstall nahi karna padta.</p></div>' +
+      '<p class="text-xs text-slate-500 dark:text-slate-400">Download karke install karo — v1.5.9 ya uske baad ke version se seedha update ho jata hai, uninstall nahi karna padta.</p></div>' +
       '<button type="button" class="btn-primary !py-2" data-qa="downloadUpdate">Download</button>' +
       '<button type="button" class="btn-ghost" data-qa="dismissUpdate" title="Dismiss">✕</button></div>' : '') +
       '<h1 class="text-2xl font-extrabold text-navy dark:text-white">Hello, ' + D.esc(me().name.split(' ')[0]) + ' 👋</h1>' +
@@ -622,7 +622,7 @@
       crumbs.map(function (c, idx) {
         return (idx ? '<span class="text-slate-400">›</span>' : '') + '<button type="button" class="link" data-crumb="' + (c.id || '') + '">' + D.esc(c.name) + '</button>';
       }).join('') + '</nav>' +
-      '<span class="ml-auto flex gap-2"><button type="button" class="btn-soft" data-qa="subfolder">＋ Subfolder</button><button type="button" class="btn-primary !py-2" data-qa="folder">＋ New Folder</button></span></div>';
+      '<span class="ml-auto flex gap-2"><button type="button" class="btn-soft" data-qa="subfolder">＋ Subfolder</button><button type="button" class="btn-primary !py-2" data-qa="folder">＋ New Folder</button><button type="button" class="btn-outline !py-2" data-qa="note">📝 New Note</button></span></div>';
     if (folders.length) {
       html += '<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">' + folders.map(function (f) {
         var count = myItems().filter(function (i) { return i.folderId === f.id && !i.isDeleted; }).length;
@@ -637,7 +637,7 @@
       html += emptyState('📁', 'No folders here', 'Folders help you organise everything. Create your first folder below.', '<button type="button" class="btn-primary" data-qa="folder">＋ New Folder</button>');
     }
     html += '<h2 class="sec-h">' + (state.folderId ? 'Items in this folder' : '📄 All files (no folder)') + '</h2>';
-    html += bulkBarHtml() + listHtml(items, { emptyTitle: 'No items here', emptySub: 'Items you move into this folder will appear here.', emptyIcon: '🗂️' });
+    html += bulkBarHtml() + listHtml(items, { emptyTitle: 'No items here', emptySub: 'Items you move into this folder will appear here — or write a text note directly in this folder, no upload needed.', emptyIcon: '🗂️', emptyCta: '<button type="button" class="btn-primary" data-qa="note">📝 Add Text Note</button>' });
     return html;
   }
 
@@ -646,7 +646,8 @@
     var items = sortItems(filterByChip(applySearch(visibleItems(myItems()))));
     return '<h1 class="text-2xl font-extrabold text-navy dark:text-white mb-1">All Files</h1>' +
       '<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">' + items.length + ' item' + (items.length === 1 ? '' : 's') + ' • tap a card to open, ⋯ for more actions</p>' +
-      bulkBarHtml() + toolbarHtml(true) + listHtml(items, { emptyTitle: 'No files match', emptySub: 'Try a different search or filter, or save something new.', emptyCta: '<button type="button" class="btn-primary" data-qa="save">＋ Save Link</button><button type="button" class="btn-outline" data-qa="upload">⬆ Upload File</button>' });
+      '<div class="flex flex-wrap gap-2 mb-4"><button type="button" class="btn-primary !py-2" data-qa="save">＋ Save Link</button><button type="button" class="btn-outline !py-2" data-qa="upload">⬆ Upload File</button><button type="button" class="btn-outline !py-2" data-qa="note">📝 New Note</button></div>' +
+      bulkBarHtml() + toolbarHtml(true) + listHtml(items, { emptyTitle: 'No files match', emptySub: 'Try a different search or filter, or save something new.', emptyCta: '<button type="button" class="btn-primary" data-qa="save">＋ Save Link</button><button type="button" class="btn-outline" data-qa="upload">⬆ Upload File</button><button type="button" class="btn-outline" data-qa="note">📝 New Note</button>' });
   }
   function viewFavourites() {
     var items = sortItems(filterByChip(applySearch(visibleItems(myItems()).filter(function (i) { return i.isFavourite; }))));
@@ -860,9 +861,12 @@
         megaCloudHtml() + '</div>';
     }
     return '<div class="card p-5"><h2 class="font-bold text-lg mb-2">ℹ️ About SaveBox</h2>' +
-      '<p class="text-sm">SaveBox <b>v1.5.8</b> — Personal Cloud Storage &amp; Digital Locker.</p>' +
-      '<div class="flex flex-wrap items-center gap-2 mt-3"><button type="button" class="btn-soft" data-qa="checkUpdate">🔄 Check for updates</button><span class="text-xs text-slate-500 dark:text-slate-400">Current version: v1.5.8 — new versions install directly over the old app, no uninstall needed (from v1.5.8).</span></div>' +
-      '<h3 class="font-bold mt-4 mb-1 text-sm">What works in v1.5.8</h3><ul class="text-sm list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-300">' +
+      '<p class="text-sm">SaveBox <b>v1.5.9</b> — Personal Cloud Storage &amp; Digital Locker.</p>' +
+      '<div class="flex flex-wrap items-center gap-2 mt-3"><button type="button" class="btn-soft" data-qa="checkUpdate">🔄 Check for updates</button><span class="text-xs text-slate-500 dark:text-slate-400">Current version: v1.5.9 — new versions install directly over the old app, no uninstall needed (from v1.5.7).</span></div>' +
+      '<h3 class="font-bold mt-4 mb-1 text-sm">What works in v1.5.9</h3><ul class="text-sm list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-300">' +
+      '<li>Notes under photos in v1.5.9 — open any photo or file and a Note box sits right under the preview: write anything about it, save it, and it stays with the file (searchable, synced with the file).</li>' +
+      '<li>Add Text in v1.5.9 — “📝 New Note” is now on Home, All Files and inside every folder: write text without uploading anything.</li>' +
+      '<li>Text inside a new folder in v1.5.9 — creating a folder opens it straight away, and the 📝 New Note button inside lets you add text directly in that folder, no upload needed.</li>' +
       '<li>Save links (YouTube, Instagram, Facebook, TikTok, any website) with real metadata fetch</li>' +
       '<li>Upload files up to 50 MB each — your connected cloud is used first, this device only when every connected cloud is full</li>' +
       '<li>Notes, folders &amp; subfolders, favourites, trash, multi-select, search &amp; filters</li>' +
@@ -892,7 +896,7 @@
       '<li>On the native Android app, fingerprint can also use BiometricPrompt (Phase 6)</li>' +
       '<li>Some websites block metadata fetching — you can always enter the title manually</li>' +
       '<li>Backups skip files over 10 MB (re-upload those manually after restore)</li></ul>' +
-      '<p class="text-xs text-slate-400 mt-4">Made for somya • Free • v1.5.8</p></div>';
+      '<p class="text-xs text-slate-400 mt-4">Made for somya • Free • v1.5.9</p></div>';
   }
 
   /* ---------- event binding for the current view ---------- */
@@ -969,7 +973,7 @@
     else if (qa === 'upload') uploadModal();
     else if (qa === 'folder') folderModal(null, state.view === 'folders' ? state.folderId : null);
     else if (qa === 'subfolder') folderModal(null, state.folderId);
-    else if (qa === 'note') noteModal(null);
+    else if (qa === 'note') noteModal(null, state.view === 'folders' ? state.folderId : null); // v1.5.9 — a note started inside a folder lands in that folder
     else if (qa === 'saveProfile') saveProfile();
     else if (qa === 'changePhoto') changePhoto();
     else if (qa === 'removePhoto') removePhoto();
@@ -1163,14 +1167,20 @@
     });
   }
 
-  /* ----- Notes ----- */
-  function noteModal(item) {
+  /* ----- Notes -----
+     v1.5.9 — noteModal(item, presetFolderId): when a note is started from
+     inside a folder (Home → Folders → open a folder → 📝 New Note), the
+     "Save to folder" dropdown defaults to that folder, so the text lands
+     directly inside it with no upload. Notes are plain items (kind
+     'note') — title + description — so they are searchable, favouritable
+     and Firestore-synced exactly like every other item. */
+  function noteModal(item, presetFolderId) {
     var isEdit = !!item;
     openModal(modalHead(isEdit ? 'Edit Note' : 'New Note', isEdit ? '' : 'Notes are saved as items you can search, tag and favourite.') +
       '<div class="space-y-4"><div><label class="lbl">Title</label><input id="ntTitle" class="inp" value="' + D.esc(item ? displayName(item) : '') + '" placeholder="Note title"></div>' +
       '<div><label class="lbl">Note</label><textarea id="ntBody" class="inp" style="min-height:180px" placeholder="Write your note here…">' + D.esc(item ? (item.description || '') : '') + '</textarea></div>' +
       '<div><label class="lbl">Tags (comma separated)</label><input id="ntTags" class="inp" value="' + D.esc(item ? (item.tags || []).join(', ') : '') + '"></div>' +
-      '<div><label class="lbl">Save to folder</label><select id="ntFolder" class="inp"><option value="">All Files (no folder)</option>' + folderOptionsHtml(item ? item.folderId : '') + '</select></div>' +
+      '<div><label class="lbl">Save to folder</label><select id="ntFolder" class="inp"><option value="">All Files (no folder)</option>' + folderOptionsHtml(item ? item.folderId : (presetFolderId || '')) + '</select></div>' +
       '<button type="button" class="btn-primary w-full" id="ntSaveBtn">' + (isEdit ? 'Save Changes' : '💾 Save Note') + '</button></div>');
     document.getElementById('ntSaveBtn').addEventListener('click', function () {
       var title = document.getElementById('ntTitle').value.trim();
@@ -1221,10 +1231,15 @@
         folder.name = name; folder.icon = selIcon; folder.color = selColor;
         D.logActivity(db, 'folder_edited', 'Renamed folder to ' + name);
       } else {
-        db.folders.push({ id: D.uid(), userId: me().id, name: name, icon: selIcon, color: selColor, parentId: parentId || null, createdAt: Date.now(), isPrivate: false });
+        // v1.5.9 — a newly created folder opens straight away, so the user
+        // can add text directly inside it (📝 New Note) with no upload.
+        var newId = D.uid();
+        db.folders.push({ id: newId, userId: me().id, name: name, icon: selIcon, color: selColor, parentId: parentId || null, createdAt: Date.now(), isPrivate: false });
         D.logActivity(db, 'folder_created', 'Created folder: ' + name);
       }
-      save(); closeModal(); renderView();
+      save(); closeModal();
+      if (isEdit) { renderView(); }
+      else { state.folderId = newId; go('folders'); }
       toast(isEdit ? 'Folder updated ✓' : 'Folder created ✓', 'ok');
     });
   }
@@ -1291,6 +1306,14 @@
       '<p class="text-xs text-slate-500">' + D.fmtSize(item.fileSize) + ' • ' + D.fmtDate(item.createdAt) + ' • ' + D.esc(item.fileType.toUpperCase() || type) + '</p></div>' +
       '<button type="button" class="btn-ghost shrink-0" id="pvClose">✕</button></div>' +
       '<div id="pvBody" class="flex-1 overflow-auto rounded-xl bg-slate-100 dark:bg-slate-900 grid place-items-center min-h-[16rem]"><p class="text-slate-500 p-6">⏳ Loading preview…</p></div>' +
+      /* v1.5.9 — note box directly under the photo/preview: one note per
+         file, stored on the file's own record (item.description — the same
+         field "Edit details" uses), so it is searched and Firestore-synced
+         with the file. It renders even when the file bytes are missing,
+         because the note lives in the metadata, not in the file. */
+      '<div class="mt-3 card !shadow-none p-3"><label class="lbl" for="pvNote">📝 Note about this file</label>' +
+      '<textarea id="pvNote" class="inp" style="min-height:72px" placeholder="Add a note about this file…">' + D.esc(item.description || '') + '</textarea>' +
+      '<div class="flex items-center gap-2 mt-2"><button type="button" class="btn-primary !py-2 flex-1" id="pvNoteSave">💾 Save Note</button><span id="pvNoteSaved" class="text-xs text-slate-500"></span></div></div>' +
       '<div class="flex flex-wrap items-center gap-2 mt-3">' +
       '<button type="button" class="btn-soft" id="pvPrev">← Prev</button><button type="button" class="btn-soft" id="pvNext">Next →</button>' +
       (type === 'image' ? '<button type="button" class="btn-soft" id="pvZoomOut">− Zoom</button><button type="button" class="btn-soft" id="pvZoomIn">+ Zoom</button><button type="button" class="btn-soft" id="pvFull">⛶ Fullscreen</button>' : '') +
@@ -1301,6 +1324,16 @@
     document.getElementById('pvNext').addEventListener('click', function () { state.previewIdx = (state.previewIdx + 1) % state.previewList.length; showPreview(); });
     document.getElementById('pvDownload').addEventListener('click', function () { downloadItem(item.id); });
     document.getElementById('pvMenu').addEventListener('click', function () { closePreview(); itemMenu(item.id); });
+    // v1.5.9 — save the note on this file's record (same store/sync as the file itself).
+    document.getElementById('pvNoteSave').addEventListener('click', function () {
+      var v = document.getElementById('pvNote').value;
+      item.description = v; item.updatedAt = Date.now();
+      D.logActivity(db, 'file_note', 'Note saved on file: ' + displayName(item));
+      save();
+      var s = document.getElementById('pvNoteSaved');
+      if (s) s.textContent = 'Saved ✓ ' + new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      toast('Note saved ✓', 'ok');
+    });
     var zi = document.getElementById('pvZoomIn'), zo = document.getElementById('pvZoomOut'), fu = document.getElementById('pvFull');
     if (zi) zi.addEventListener('click', function () { state.imgZoom = Math.min(3, state.imgZoom + 0.25); applyZoom(); });
     if (zo) zo.addEventListener('click', function () { state.imgZoom = Math.max(0.5, state.imgZoom - 0.25); applyZoom(); });
