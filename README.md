@@ -1,6 +1,6 @@
 # SaveBox
 
-**Android APK (v1.5.7):** https://github.com/somya2005-Aje/savebox/releases/download/v1.5.7/savebox-v1.5.7.apk — download on your phone, allow "Install unknown apps" for Chrome if asked, tap Install (Play Protect may warn — tap Install anyway). **If v1.5.6 is already installed, uninstall it first, then install v1.5.7** — a plain update can keep the old launcher icon cached. Source repo: https://github.com/somya2005-Aje/savebox (public; APK rebuilt by GitHub Actions from `android-app/`). v1.5.7 — Personal Cloud Storage & Digital Locker
+**Android APK (v1.5.8):** https://github.com/somya2005-Aje/savebox/releases/download/v1.5.8/savebox-v1.5.8.apk — download on your phone, allow "Install unknown apps" for Chrome if asked, tap Install (Play Protect may warn — tap Install anyway). **From v1.5.7, new versions install directly over the old app — no uninstall needed.** If v1.5.6 is still installed, uninstall it once (v1.5.6 was signed with a different key), then all later updates install directly. Source repo: https://github.com/somya2005-Aje/savebox (public; APK rebuilt by GitHub Actions from `android-app/`). v1.5.8 — Personal Cloud Storage & Digital Locker
 
 Save links, files and notes in one safe place. Find them in seconds, share them
 safely, and lock private files with a PIN.
@@ -8,7 +8,7 @@ safely, and lock private files with a PIN.
 **Live URL (after deploy):** https://savebox.pages.dev/
 **Stack:** vanilla HTML/CSS/JS + Tailwind via CDN. No build step, no framework.
 
-## What works in v1.5.7 (no setup needed)
+## What works in v1.5.8 (no setup needed)
 
 - **Auth** — register / sign in / sign out, device-local password recovery,
   profile edit, change password, account deletion (wipes that user's data).
@@ -230,6 +230,8 @@ loopback TCP socket that is blocked there. Build on a real machine instead.
 
 ## Version
 
+v1.5.8 — 24 Nov 2026 (safe area: the header stays below the phone's status bar and the bottom nav above the back/home buttons, via CSS safe-area insets + the @capacitor/status-bar plugin; in-app update check: the app silently checks GitHub releases on start and shows a Download banner on Home, plus a "Check for updates" button in Settings → About. Updates install directly over the old app from v1.5.7 — v1.5.6 was signed with a different key (SHA-1 7e69b93a…), which is why it needed an uninstall; v1.5.7+ all share the committed keystore SHA-1 e42a6d03….)
+
 v1.5.7 — 24 Nov 2026 (Google Sign-In now happens INSIDE the installed app
 by user order: the web `signInWithRedirect` flow opened Chrome and the
 return URL https://localhost/… only exists inside the APK WebView, so Chrome
@@ -244,9 +246,9 @@ the repo so the APK signature — and the Firebase SHA-1 — never change
 between Actions builds. The Android app is registered in the Firebase
 console (package com.savebox.app, App ID
 1:877557763090:android:740b6e11de51f9a2bc9ccb) and google-services.json is at
-android-app/android/app/ — see FIREBASE_SETUP.md. **v1.5.7 APK is live:**
-https://github.com/somya2005-Aje/savebox/releases/download/v1.5.7/savebox-v1.5.7.apk
-(6,169,118 bytes, versionCode 157).)
+android-app/android/app/ — see FIREBASE_SETUP.md. **v1.5.8 APK is live:**
+https://github.com/somya2005-Aje/savebox/releases/download/v1.5.8/savebox-v1.5.8.apk
+(versionCode 158).)
 
 v1.5.6 — 24 Nov 2026 (App launcher icon by user order: the SaveBox shield
 (blue #1769AA/#2F8FE5 + white cloud/check + gold dot on navy #102A43) is now

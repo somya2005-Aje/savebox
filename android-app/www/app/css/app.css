@@ -224,3 +224,19 @@ input[type="checkbox"].cb { width:1.15rem; height:1.15rem; accent-color:#1769AA;
 .fp-btn { display:flex; flex-direction:column; align-items:center; gap:.4rem; width:100%; padding:1.4rem 1rem; border-radius:1rem; background:rgba(255,255,255,.14); border:1.5px solid rgba(255,255,255,.35); color:#fff; font-size:2rem; font-weight:800; cursor:pointer; }
 .fp-btn span { font-size:.95rem; }
 .fp-btn:active { background:rgba(255,255,255,.28); }
+
+/* ================= v1.5.8 — safe area: keep the app chrome clear of the
+   phone's status bar (top) and system navigation bar (bottom).
+   viewport-fit=cover is already in the viewport meta; these rules use the
+   safe-area insets, so the header never slides under the notification area
+   and the bottom nav never sits on the back/home buttons. On desktop/web
+   the insets are 0 and the max() fallbacks keep the normal padding.
+   The native StatusBar plugin (see app.js setupNativeChrome) additionally
+   makes the WebView start below the status bar on Android; when it does,
+   env(safe-area-inset-top) reports 0, so the two fixes never double up. */
+header.app-topbar { padding-top: max(0.6rem, env(safe-area-inset-top, 0px)); }
+nav#bottomNav { padding-bottom: max(0.375rem, env(safe-area-inset-bottom, 0px)); }
+#authView > div { padding-top: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 0.75rem)); }
+#toastRoot { bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4.25rem)); }
+.modal-bg { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.lock-screen { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }

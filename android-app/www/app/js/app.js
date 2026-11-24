@@ -1,6 +1,8 @@
-/* SaveBox v1.5.7 — main app logic (MEGA cloud files only) */
+/* SaveBox v1.5.8 — main app logic (MEGA cloud files only) */
 (function () {
   'use strict';
+  var APP_VERSION = '1.5.8'; // v1.5.8 — used by the in-app update check; bump with every release
+  var UPDATE_REPO = 'somya2005-Aje/savebox';
   var D = window.SaveBoxDB;
   var FBx = window.SaveBoxFirebase; // null-safe: firebase.js loads before app.js
   var R2x = window.SaveBoxR2; // null-safe: r2.js loads before app.js (dormant in v1.4.0 — R2 was dropped, see R2_SETUP.md)
@@ -16,7 +18,8 @@
     grid: db.settings.gridDefault || 'grid', selected: new Set(), selectMode: false,
     settingsTab: 'profile', privateUnlocked: false, previewList: [], previewIdx: 0,
     lastActivity: Date.now(), lockTimer: null, imgZoom: 1,
-    googleAuthNeeded: false // v1.5.3 — true only after a sync failed with an auth/permission error; shows the "Reconnect Google" button in Cloud Sync
+    googleAuthNeeded: false, // v1.5.3 — true only after a sync failed with an auth/permission error; shows the "Reconnect Google" button in Cloud Sync
+    updateAvailable: null // v1.5.8 — { tag, url } when the update check found a newer release; shown as a banner on Home
   };
 
   function save() { D.saveDb(db); }
@@ -137,8 +140,79 @@
     document.documentElement.classList.toggle('dark', dark);
     var t = dark ? '☀️' : '🌙';
     ['themeBtn', 'authThemeBtn'].forEach(function (id) { var b = document.getElementById(id); if (b) b.textContent = t; });
+    applyStatusBarStyle(); // v1.5.8 — keep the status-bar text readable in both themes (native only)
   }
   function toggleTheme() { db.settings.theme = db.settings.theme === 'dark' ? 'light' : 'dark'; save(); applyTheme(); }
+
+  /* ---------- v1.5.8 — native status bar: the WebView starts BELOW the
+     status bar instead of drawing under it, so the header never slides under
+     the notification area. The CSS safe-area insets (app.css) handle the rest
+     on web + native; when this plugin runs, env(safe-area-inset-top) reports
+     0, so the two fixes never double up. No-ops on the website. */
+  function nativeStatusBar() {
+    if (typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform || !Capacitor.isNativePlatform()) return null;
+    var g = window.capacitorStatusBar;
+    return (g && g.StatusBar) || null;
+  }
+  function setupNativeChrome() {
+    var SB = nativeStatusBar(); if (!SB) return;
+    try { var p = SB.setOverlaysWebView({ overlay: false }); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    applyStatusBarStyle();
+  }
+  function applyStatusBarStyle() {
+    var SB = nativeStatusBar(); if (!SB) return;
+    var dark = document.documentElement.classList.contains('dark');
+    try { var p1 = SB.setStyle({ style: dark ? 'LIGHT' : 'DARK' }); if (p1 && p1.catch) p1.catch(function () {}); } catch (e) {}
+    try { var p2 = SB.setBackgroundColor({ color: dark ? '#0B1B2B' : '#F4F8FC' }); if (p2 && p2.catch) p2.catch(function () {}); } catch (e) {}
+  }
+
+  /* ---------- v1.5.8 — in-app update check ----------
+     Silently asks GitHub for the latest SaveBox release and compares it with
+     this build. Never blocks startup, never shows an error when offline or
+     when the check fails — it just stays quiet. When a newer release exists
+     a banner appears on Home; Settings → About has a manual "Check for
+     updates" button. Download always opens the release APK URL in the
+     system browser / download manager (never a silent in-WebView download). */
+  var updateCheckDone = false;
+  function parseSemver(v) {
+    var m = String(v || '').replace(/^v/i, '').match(/^(\d+)\.(\d+)\.(\d+)/);
+    return m ? [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)] : null;
+  }
+  function isNewerVersion(latest, current) {
+    var a = parseSemver(latest), b = parseSemver(current);
+    if (!a || !b) return false;
+    for (var i = 0; i < 3; i++) { if (a[i] > b[i]) return true; if (a[i] < b[i]) return false; }
+    return false;
+  }
+  function checkForUpdate(manual) {
+    var ctrl = null, timer = null;
+    try { ctrl = new AbortController(); timer = setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 8000); } catch (e) { ctrl = null; }
+    fetch('https://api.github.com/repos/' + UPDATE_REPO + '/releases/latest', { signal: ctrl ? ctrl.signal : undefined, headers: { 'Accept': 'application/vnd.github+json' } })
+      .then(function (r) { if (timer) clearTimeout(timer); if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function (rel) {
+        var tag = rel && rel.tag_name ? String(rel.tag_name) : '';
+        if (!tag) { if (manual) toast('Could not check for updates — try again later.', 'err'); return; }
+        var dl = 'https://github.com/' + UPDATE_REPO + '/releases/download/' + tag + '/savebox-' + tag + '.apk';
+        if (rel && rel.assets) {
+          for (var i = 0; i < rel.assets.length; i++) {
+            if (rel.assets[i].name === 'savebox-' + tag + '.apk' && rel.assets[i].browser_download_url) { dl = rel.assets[i].browser_download_url; break; }
+          }
+        }
+        if (isNewerVersion(tag, APP_VERSION)) {
+          state.updateAvailable = { tag: tag, url: dl };
+          if (state.view === 'home') renderView();
+          if (manual) toast('Naya update available: ' + tag + ' — Download button se update karo.');
+        } else {
+          state.updateAvailable = null;
+          if (manual) toast('You are on the latest version (v' + APP_VERSION + ').', 'ok');
+        }
+      })
+      .catch(function () { if (timer) clearTimeout(timer); if (manual) toast('Could not check for updates — check your connection and try again.', 'err'); });
+  }
+  function scheduleUpdateCheck() {
+    if (updateCheckDone) return; updateCheckDone = true;
+    setTimeout(function () { try { checkForUpdate(false); } catch (e) {} }, 2500);
+  }
 
   /* ---------- toasts & modals ---------- */
   function toast(msg, kind) {
@@ -194,7 +268,7 @@
       return;
     }
     openModal(modalHead('Google Sign-In needs Firebase') +
-      '<p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Google Sign-In is a cloud feature. This version of SaveBox (v1.5.7) stores accounts on this device only, so Google Sign-In is not available yet.</p>' +
+      '<p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Google Sign-In is a cloud feature. This version of SaveBox (v1.5.8) stores accounts on this device only, so Google Sign-In is not available yet.</p>' +
       '<p class="text-sm text-slate-600 dark:text-slate-300 mb-4">To enable it, connect a free Firebase project — see FIREBASE_SETUP.md in the SaveBox project folder (free, about 10 minutes, no payment). Once connected, this button signs you in with Google — no code changes needed.</p>' +
       '<button class="btn-primary w-full" type="button" onclick="SaveBoxUI.closeModal()">Got it</button>');
   }
@@ -405,6 +479,8 @@
     renderNav();
     renderView();
     updateStorageWidget();
+    setupNativeChrome(); // v1.5.8 — WebView below the status bar (native only)
+    scheduleUpdateCheck(); // v1.5.8 — silent GitHub release check, never blocks
     armAutoLock();
     if (db.settings.appLockEnabled && hasLockMethod()) showLockScreen();
     setTimeout(function () { syncNow(false); }, 900); // silent background cloud sync
@@ -504,7 +580,12 @@
       return '<div class="stat-card"><div class="flex items-center gap-2"><span class="text-2xl">' + icon + '</span><span class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">' + label + '</span></div>' +
         '<p class="text-2xl font-extrabold text-navy dark:text-white mt-1">' + val + '</p><p class="text-xs text-slate-500 dark:text-slate-400">' + sub + '</p></div>';
     }
-    return '<h1 class="text-2xl font-extrabold text-navy dark:text-white">Hello, ' + D.esc(me().name.split(' ')[0]) + ' 👋</h1>' +
+    return (state.updateAvailable ? '<div class="card p-4 mb-4 flex flex-wrap items-center gap-3" style="border-color:#1769AA">' +
+      '<span class="text-2xl">⬆️</span><div class="flex-1 min-w-[12rem]"><p class="font-bold">Naya update available: ' + D.esc(state.updateAvailable.tag) + '</p>' +
+      '<p class="text-xs text-slate-500 dark:text-slate-400">Download karke install karo — v1.5.8 ya uske baad ke version se seedha update ho jata hai, uninstall nahi karna padta.</p></div>' +
+      '<button type="button" class="btn-primary !py-2" data-qa="downloadUpdate">Download</button>' +
+      '<button type="button" class="btn-ghost" data-qa="dismissUpdate" title="Dismiss">✕</button></div>' : '') +
+      '<h1 class="text-2xl font-extrabold text-navy dark:text-white">Hello, ' + D.esc(me().name.split(' ')[0]) + ' 👋</h1>' +
       '<p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Your locker at a glance.</p>' +
       '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">' +
       stat('📦', 'Total items', items.length, 'files, links &amp; notes') +
@@ -779,8 +860,9 @@
         megaCloudHtml() + '</div>';
     }
     return '<div class="card p-5"><h2 class="font-bold text-lg mb-2">ℹ️ About SaveBox</h2>' +
-      '<p class="text-sm">SaveBox <b>v1.5.7</b> — Personal Cloud Storage &amp; Digital Locker.</p>' +
-      '<h3 class="font-bold mt-4 mb-1 text-sm">What works in v1.5.7</h3><ul class="text-sm list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-300">' +
+      '<p class="text-sm">SaveBox <b>v1.5.8</b> — Personal Cloud Storage &amp; Digital Locker.</p>' +
+      '<div class="flex flex-wrap items-center gap-2 mt-3"><button type="button" class="btn-soft" data-qa="checkUpdate">🔄 Check for updates</button><span class="text-xs text-slate-500 dark:text-slate-400">Current version: v1.5.8 — new versions install directly over the old app, no uninstall needed (from v1.5.8).</span></div>' +
+      '<h3 class="font-bold mt-4 mb-1 text-sm">What works in v1.5.8</h3><ul class="text-sm list-disc pl-5 space-y-1 text-slate-600 dark:text-slate-300">' +
       '<li>Save links (YouTube, Instagram, Facebook, TikTok, any website) with real metadata fetch</li>' +
       '<li>Upload files up to 50 MB each — your connected cloud is used first, this device only when every connected cloud is full</li>' +
       '<li>Notes, folders &amp; subfolders, favourites, trash, multi-select, search &amp; filters</li>' +
@@ -796,6 +878,8 @@
       '<li>Blue theme restored in v1.5.5 — the original blue colours are back (pink removed).</li>' +
       '<li>App icon in v1.5.6 — the SaveBox shield is now the APK launcher icon (and the Add-to-Home-Screen icon).</li>' +
       '<li>Google Sign-In in v1.5.7 — in the installed app, “Continue with Google” now opens the Google account chooser INSIDE the app (no Chrome, no localhost error); on the website the sign-in flow is unchanged.</li>' +
+      '<li>Safe area in v1.5.8 — the header stays below the phone’s status bar and the bottom nav stays above the back/home buttons; the app also feels a bit more compact.</li>' +
+      '<li>Updates in v1.5.8 — the app checks GitHub for new versions on start (silently, never blocks) and shows a Download banner on Home; Settings → About has a “Check for updates” button. New versions install directly over the old app — no uninstall needed from v1.5.7 (v1.5.6 users must uninstall once, because v1.5.6 was signed with a different key).</li>' +
       '<li>MEGA login asks about two-step authentication first — pick “No 2FA” to log in without a code, or “2FA is on” to enter your 6-digit code; new to MEGA? A link to mega.nz sits under the login form.</li>' +
       (window.FIREBASE_ENABLED ? '<li>Firebase connected — Google Sign-In + Firestore sync (folders, links &amp; notes).</li>' : '') +
       (window.R2_ENABLED ? '<li>Cloud files on Cloudflare R2 (10 GB free) — uploads go to your private bucket when signed in.</li>' : '') + '</ul>' +
@@ -808,7 +892,7 @@
       '<li>On the native Android app, fingerprint can also use BiometricPrompt (Phase 6)</li>' +
       '<li>Some websites block metadata fetching — you can always enter the title manually</li>' +
       '<li>Backups skip files over 10 MB (re-upload those manually after restore)</li></ul>' +
-      '<p class="text-xs text-slate-400 mt-4">Made for somya • Free • v1.5.7</p></div>';
+      '<p class="text-xs text-slate-400 mt-4">Made for somya • Free • v1.5.8</p></div>';
   }
 
   /* ---------- event binding for the current view ---------- */
@@ -899,6 +983,9 @@
     else if (qa === 'lockSetup') lockSetupModal();
     else if (qa === 'passLockSetup') passwordLockModal();
     else if (qa === 'googleSignIn') startGoogleSignIn(null);
+    else if (qa === 'checkUpdate') checkForUpdate(true);
+    else if (qa === 'downloadUpdate') { if (state.updateAvailable && state.updateAvailable.url) window.open(state.updateAvailable.url, '_system'); }
+    else if (qa === 'dismissUpdate') { state.updateAvailable = null; renderView(); }
     else if (qa === 'reconnectGoogle') reconnectGoogle();
     else if (qa === 'toggleLock') toggleAppLock();
     else if (qa === 'autoLock') autoLockModal();
