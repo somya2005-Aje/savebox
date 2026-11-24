@@ -1,6 +1,6 @@
 # SaveBox
 
-**Android APK (v1.5.6):** https://github.com/somya2005-Aje/savebox/releases/download/v1.5.6/savebox-v1.5.6.apk — download on your phone, allow "Install unknown apps" for Chrome if asked, tap Install (Play Protect may warn — tap Install anyway). **If v1.5.5 is already installed, uninstall it first, then install v1.5.6** — a plain update can keep the old white launcher icon cached. Source repo: https://github.com/somya2005-Aje/savebox (public; APK rebuilt by GitHub Actions from `android-app/`). v1.5.6 — Personal Cloud Storage & Digital Locker
+**Android APK (v1.5.7):** https://github.com/somya2005-Aje/savebox/releases/download/v1.5.7/savebox-v1.5.7.apk — download on your phone, allow "Install unknown apps" for Chrome if asked, tap Install (Play Protect may warn — tap Install anyway). **If v1.5.6 is already installed, uninstall it first, then install v1.5.7** — a plain update can keep the old launcher icon cached. Source repo: https://github.com/somya2005-Aje/savebox (public; APK rebuilt by GitHub Actions from `android-app/`). v1.5.7 — Personal Cloud Storage & Digital Locker
 
 Save links, files and notes in one safe place. Find them in seconds, share them
 safely, and lock private files with a PIN.
@@ -241,11 +241,12 @@ the popup → redirect flow. A persistent DEBUG keystore
 (`android-app/android/app/debug.keystore`, SHA-1
 E4:2A:6D:03:A4:01:6E:EE:51:1E:E1:12:89:DC:EB:B0:72:A9:64:E2) is committed to
 the repo so the APK signature — and the Firebase SHA-1 — never change
-between Actions builds. **v1.5.7 APK release is pending the Firebase console
-step**: register the Android app (package com.savebox.app) with this SHA-1
-and place google-services.json at android-app/android/app/ — see
-FIREBASE_SETUP.md. Until then the v1.5.6 APK above stays the current
-download. VersionCode 157.)
+between Actions builds. The Android app is registered in the Firebase
+console (package com.savebox.app, App ID
+1:877557763090:android:740b6e11de51f9a2bc9ccb) and google-services.json is at
+android-app/android/app/ — see FIREBASE_SETUP.md. **v1.5.7 APK is live:**
+https://github.com/somya2005-Aje/savebox/releases/download/v1.5.7/savebox-v1.5.7.apk
+(6,169,118 bytes, versionCode 157).)
 
 v1.5.6 — 24 Nov 2026 (App launcher icon by user order: the SaveBox shield
 (blue #1769AA/#2F8FE5 + white cloud/check + gold dot on navy #102A43) is now
