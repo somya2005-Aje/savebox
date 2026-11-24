@@ -1,0 +1,1 @@
+{"author":"","dependencies":{"@capacitor/android":"8.6.0","@capacitor/cli":"8.6.0","@capacitor/core":"8.6.0"},"description":"SaveBox — Personal Cloud Storage & Digital Locker (Capacitor wrapper around the SaveBox web app)","keywords":[],"license":"ISC","main":"index.js","name":"savebox-android","scripts":{},"version":"1.0.0"}

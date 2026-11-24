@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SaveBox</string>
+    <string name="title_activity_main">SaveBox</string>
+    <string name="package_name">com.savebox.app</string>
+    <string name="custom_url_scheme">com.savebox.app</string>
+</resources>

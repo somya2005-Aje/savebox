@@ -1,0 +1,11 @@
+name = "savebox-r2"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Private R2 bucket for SaveBox cloud files (free tier: 10 GB, no card).
+# The bucket MUST exist before deploy: create it in the Cloudflare dashboard
+# (R2 -> Create bucket -> name `savebox-files`) or via:
+#   wrangler r2 bucket create savebox-files
+[[r2_buckets]]
+binding = "SAVEBOX_R2"
+bucket_name = "savebox-files"

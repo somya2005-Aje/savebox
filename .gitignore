@@ -1,0 +1,11 @@
+android-app/node_modules/
+android-app/.gradle-home/
+android-app/android/app/build/
+android-app/android/build/
+android-app/android/.gradle/
+android-app/android/local.properties
+.wrangler/
+__pycache__/
+*.apk
+*.log
+.DS_Store

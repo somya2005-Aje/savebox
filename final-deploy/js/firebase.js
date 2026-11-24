@@ -1,0 +1,255 @@
+/* SaveBox v1.5.3 — Firebase cloud layer (compat SDK, loaded via CDN)
+ *
+ * This file is ONLY active when window.FIREBASE_ENABLED is true, i.e. when
+ * a real config has been pasted into js/firebase-config.js. With the
+ * placeholder config it initialises to nothing and every function below
+ * safely no-ops / rejects — the app keeps working 100% in device-local
+ * mode. The app never claims cloud sync works without a config.
+ *
+ * What it does when configured:
+ *  - Auth: Google Sign-In (popup, redirect fallback), email/password
+ *    register / sign-in / password-reset, sign-out, auth-state listener.
+ *  - Firestore: folders + items metadata for the signed-in user only
+ *    (ownerId == uid; rules in FIREBASE_SETUP.md enforce this).
+ *    First sync merges local data UP to the cloud, then the cloud is the
+ *    source of truth for metadata.
+ *  - Storage: file blobs under files/{uid}/{itemId}; download URLs are
+ *    used as a fallback when a file is not on this device.
+ */
+(function () {
+  'use strict';
+
+  var FB = {
+    ready: false,
+    auth: null,
+    fs: null,
+    storage: null,
+    projectId: '',
+    lastSyncAt: 0
+  };
+
+  function clean(obj) {
+    // Firestore rejects `undefined` values — round-trip through JSON.
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function init() {
+    try {
+      if (!window.FIREBASE_ENABLED || typeof firebase === 'undefined' || !firebase.apps) return false;
+      if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+      FB.auth = firebase.auth();
+      FB.fs = firebase.firestore();
+      FB.storage = firebase.storage();
+      FB.projectId = (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId) || '';
+      FB.ready = true;
+    } catch (e) {
+      FB.ready = false;
+    }
+    return FB.ready;
+  }
+
+  function needReady() {
+    if (!FB.ready) return Promise.reject(new Error('Firebase is not connected'));
+    return Promise.resolve();
+  }
+
+  /* ---------- auth ---------- */
+  function signInWithGoogle() {
+    return needReady().then(function () {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      return FB.auth.signInWithPopup(provider).then(function (cred) { return cred.user; }).catch(function (err) {
+        // Popup blocked / closed or mobile webview — fall back to redirect.
+        if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' ||
+                    err.code === 'auth/cancelled-popup-request' || err.code === 'auth/operation-not-supported-in-this-environment')) {
+          return FB.auth.signInWithRedirect(provider).then(function () { return null; });
+        }
+        throw err;
+      });
+    });
+  }
+
+  function signInWithEmail(email, pass) {
+    return needReady().then(function () {
+      return FB.auth.signInWithEmailAndPassword(email, pass).then(function (cred) { return cred.user; });
+    });
+  }
+
+  function registerWithEmail(email, pass, name) {
+    return needReady().then(function () {
+      return FB.auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
+        var user = cred.user;
+        if (name) return user.updateProfile({ displayName: name }).then(function () { return user; });
+        return user;
+      });
+    });
+  }
+
+  function resetPassword(email) {
+    return needReady().then(function () {
+      return FB.auth.sendPasswordResetEmail(email);
+    });
+  }
+
+  function signOut() {
+    if (!FB.ready) return Promise.resolve();
+    return FB.auth.signOut().catch(function () { /* local sign-out still proceeds */ });
+  }
+
+  function currentUser() {
+    return FB.ready ? FB.auth.currentUser : null;
+  }
+
+  function onAuth(cb) {
+    if (!FB.ready) return function () {};
+    // Finish a redirect-based Google sign-in if one is in flight.
+    FB.auth.getRedirectResult().then(function (res) {
+      if (res && res.user) cb(res.user);
+    }).catch(function () { /* no redirect pending — normal */ });
+    return FB.auth.onAuthStateChanged(function (user) { if (user) cb(user); });
+  }
+
+  /* v1.5.3 — Firestore permission/auth failure detector. A denied
+   * call means the Google session expired or a document belongs to
+   * another uid. The app must never show the raw firestore message
+   * to the user — it falls back to MEGA and offers a Google
+   * reconnect instead. */
+  function isPermError(err) {
+    if (!err) return false;
+    if (err.code === 'permission-denied' || err.code === 'unauthenticated') return true;
+    var m = String((err && err.message) || '').toLowerCase();
+    return m.indexOf('insufficient permissions') >= 0 || m.indexOf('permission-denied') >= 0 || m.indexOf('missing or insufficient') >= 0;
+  }
+
+  /* ---------- firestore sync ---------- */
+  function userDoc(uid, profile) {
+    return FB.fs.collection('users').doc(uid).set(clean({
+      email: profile.email || '', name: profile.name || '',
+      updatedAt: Date.now()
+    }), { merge: true });
+  }
+
+  function syncUp(uid, folders, items) {
+    return needReady().then(function () {
+      /* v1.5.3 — one denied document must not fail the whole sync.
+       * A doc can be denied when it already exists in Firestore owned
+       * by a different uid (user switched Google accounts) while the
+       * others sync fine. Denied docs are skipped and counted; the
+       * caller reports the count honestly. Network errors still reject. */
+      var skipped = 0;
+      function put(coll, id, data) {
+        return FB.fs.collection(coll).doc(id).set(data, { merge: true }).catch(function (err) {
+          if (isPermError(err)) { skipped++; return null; }
+          throw err;
+        });
+      }
+      var jobs = [];
+      folders.forEach(function (f) {
+        var data = clean(Object.assign({}, f, { ownerId: uid }));
+        delete data.userId;
+        jobs.push(put('folders', f.id, data));
+      });
+      items.forEach(function (it) {
+        var data = clean(Object.assign({}, it, { ownerId: uid }));
+        delete data.userId;
+        jobs.push(put('items', it.id, data));
+      });
+      return Promise.all(jobs).then(function () { return { folders: folders.length, items: items.length, skipped: skipped }; });
+    });
+  }
+
+  function syncDown(uid) {
+    return needReady().then(function () {
+      return Promise.all([
+        FB.fs.collection('folders').where('ownerId', '==', uid).get(),
+        FB.fs.collection('items').where('ownerId', '==', uid).get()
+      ]).then(function (snaps) {
+        var folders = [], items = [];
+        snaps[0].forEach(function (d) { var v = d.data(); v.id = d.id; delete v.ownerId; folders.push(v); });
+        snaps[1].forEach(function (d) { var v = d.data(); v.id = d.id; delete v.ownerId; items.push(v); });
+        return { folders: folders, items: items };
+      });
+    });
+  }
+
+  /* ---------- storage ---------- */
+  function uploadFile(uid, item, blob) {
+    return needReady().then(function () {
+      var path = 'files/' + uid + '/' + item.id;
+      var ref = FB.storage.ref(path);
+      return ref.put(blob, { contentType: blob.type || 'application/octet-stream' }).then(function () { return path; });
+    });
+  }
+
+  function getFileBlob(storagePath) {
+    return needReady().then(function () {
+      return FB.storage.ref(storagePath).getDownloadURL();
+    }).then(function (url) {
+      return fetch(url).then(function (r) {
+        if (!r.ok) throw new Error('download failed: ' + r.status);
+        return r.blob();
+      });
+    });
+  }
+
+  function deleteFile(storagePath) {
+    if (!FB.ready || !storagePath) return Promise.resolve();
+    return FB.storage.ref(storagePath).delete().catch(function () { /* already gone */ });
+  }
+
+  function deleteUserDocs(uid) {
+    if (!FB.ready) return Promise.resolve();
+    return Promise.all([
+      FB.fs.collection('folders').where('ownerId', '==', uid).get(),
+      FB.fs.collection('items').where('ownerId', '==', uid).get()
+    ]).then(function (snaps) {
+      var batch = FB.fs.batch();
+      var n = 0;
+      snaps.forEach(function (snap) { snap.forEach(function (d) { batch.delete(d.ref); n++; }); });
+      if (!n) return 0;
+      return batch.commit().then(function () { return n; });
+    }).catch(function () { return 0; });
+  }
+
+  function friendlyError(err) {
+    if (!err || !err.code) return (err && err.message) || 'Something went wrong.';
+    var map = {
+      'auth/invalid-email': 'That email address doesn’t look right.',
+      'auth/user-disabled': 'This account has been disabled.',
+      'auth/user-not-found': 'No account found with this email.',
+      'auth/wrong-password': 'Wrong password. Try again or use “Forgot password?”.',
+      'auth/invalid-credential': 'Wrong email or password. Try again.',
+      'auth/email-already-in-use': 'An account with this email already exists. Try signing in.',
+      'auth/weak-password': 'Password must be at least 6 characters.',
+      'auth/too-many-requests': 'Too many attempts — please wait a few minutes and try again.',
+      'auth/network-request-failed': 'No internet connection. Check your network and try again.',
+      'auth/unauthorized-domain': 'This domain is not authorised in Firebase → Authentication → Settings → Authorized domains.',
+      'auth/popup-closed-by-user': 'Google sign-in was closed before finishing. Try again.',
+      'auth/account-exists-with-different-credential': 'This email is already linked to a different sign-in method. Try the other method.'
+    };
+    return map[err.code] || err.message || 'Something went wrong.';
+  }
+
+  window.SaveBoxFirebase = {
+    FB: FB,
+    get ready() { return FB.ready; },
+    get projectId() { return FB.projectId; },
+    init: init,
+    signInWithGoogle: signInWithGoogle,
+    signInWithEmail: signInWithEmail,
+    registerWithEmail: registerWithEmail,
+    resetPassword: resetPassword,
+    signOut: signOut,
+    currentUser: currentUser,
+    onAuth: onAuth,
+    userDoc: userDoc,
+    syncUp: syncUp,
+    syncDown: syncDown,
+    uploadFile: uploadFile,
+    getFileBlob: getFileBlob,
+    deleteFile: deleteFile,
+    deleteUserDocs: deleteUserDocs,
+    isPermError: isPermError,
+    friendlyError: friendlyError
+  };
+})();

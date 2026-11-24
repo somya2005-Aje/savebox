@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#102A43">
+<title>SaveBox — Your Personal Cloud Storage &amp; Digital Locker</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: {
+  colors: { navy:'#102A43', royal:'#1769AA', electric:'#2F8FE5', cyanx:'#39BDEB', mist:'#F4F8FC', gold:'#F5B301' },
+  boxShadow: { soft:'0 8px 30px rgba(16,42,67,.10)', card:'0 2px 10px rgba(16,42,67,.07)' }
+}}};
+</script>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="bg-mist text-slate-800 dark:bg-[#0B1B2B] dark:text-slate-100 min-h-screen">
+
+<!-- ======================= AUTH / ONBOARDING ======================= -->
+<div id="authView" class="min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-6 lg:py-10">
+    <header class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span id="logoAuth"></span>
+        <span class="text-2xl font-extrabold tracking-tight text-navy dark:text-white">Save<span class="text-electric">Box</span></span>
+      </div>
+      <button id="authThemeBtn" class="btn-ghost" type="button" title="Toggle theme">🌙</button>
+    </header>
+
+    <div class="grid lg:grid-cols-2 gap-10 items-center mt-8 lg:mt-14">
+      <!-- Hero -->
+      <section>
+        <span class="pill-gold">✦ Personal Cloud Storage &amp; Digital Locker</span>
+        <h1 class="text-4xl lg:text-5xl font-extrabold leading-tight mt-4 text-navy dark:text-white">Everything you save,<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-royal via-electric to-cyanx">safe in one box.</span></h1>
+        <p class="mt-4 text-slate-600 dark:text-slate-300 text-lg">Save YouTube videos, Instagram reels, documents, notes and links — find them in seconds, share them safely, and lock private files with a PIN.</p>
+        <div class="hero-3d" aria-hidden="true">
+          <div class="box3d">
+            <span class="box3d-cloud">☁️</span>
+            <span class="box3d-lid"></span>
+            <span class="box3d-body">📦</span>
+            <span class="box3d-check">✓</span>
+          </div>
+          <div class="box3d-shadow"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mt-8">
+          <div class="hero-feat">📥 <b>Save anything</b><span>Links, files, notes — one tap</span></div>
+          <div class="hero-feat">🔍 <b>Find instantly</b><span>Search by name, tag or type</span></div>
+          <div class="hero-feat">🔒 <b>Private folder</b><span>PIN-locked, hidden from view</span></div>
+          <div class="hero-feat">🔗 <b>Safe sharing</b><span>Expiry + password links</span></div>
+        </div>
+        <p class="mt-6 text-sm text-slate-500 dark:text-slate-400">💡 v1.5.5 — connect MEGA in Settings → Cloud Sync and your files upload to the cloud (MEGA 20 GB free). Without a cloud connection, new files are stored on this device.</p>
+      </section>
+
+      <!-- Auth card -->
+      <section class="card p-6 lg:p-8">
+        <div id="authTabs" class="flex gap-2 mb-6">
+          <button type="button" data-tab="login" class="auth-tab active">Sign In</button>
+          <button type="button" data-tab="register" class="auth-tab">Create Account</button>
+        </div>
+
+        <form id="loginForm" class="space-y-4">
+          <button id="googleBtn" class="btn-google w-full" type="button">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+            Continue with Google</button>
+          <div class="auth-divider"><span>or continue with email</span></div>
+          <div><label class="lbl">Email</label><input id="loginEmail" type="email" required class="inp" placeholder="you@example.com" autocomplete="email"></div>
+          <div><label class="lbl">Password</label><input id="loginPassword" type="password" required class="inp" placeholder="Your password" autocomplete="current-password"></div>
+          <p id="loginError" class="err hidden"></p>
+          <button class="btn-primary w-full" type="submit">Sign In →</button>
+          <button id="forgotLink" class="link w-full text-center" type="button">Forgot password?</button>
+        </form>
+
+        <form id="registerForm" class="space-y-4 hidden">
+          <button id="googleBtnReg" class="btn-google w-full" type="button">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+            Continue with Google</button>
+          <div class="auth-divider"><span>or create an account with email</span></div>
+          <div><label class="lbl">Your name</label><input id="regName" type="text" required class="inp" placeholder="e.g. Somya" autocomplete="name"></div>
+          <div><label class="lbl">Email</label><input id="regEmail" type="email" required class="inp" placeholder="you@example.com" autocomplete="email"></div>
+          <div><label class="lbl">Password (min 6 characters)</label><input id="regPassword" type="password" required minlength="6" class="inp" placeholder="Choose a strong password" autocomplete="new-password"></div>
+          <p id="regError" class="err hidden"></p>
+          <button class="btn-primary w-full" type="submit">Create My SaveBox →</button>
+          <p class="text-xs text-slate-500 dark:text-slate-400 text-center">Your password is stored only as a secure hash on this device — never as plain text.</p>
+        </form>
+
+        <form id="forgotForm" class="space-y-4 hidden">
+          <h3 class="font-bold text-lg">Reset password</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Device-local recovery: if an account with this email exists on this device, you can set a new password. (Cloud accounts need Firebase password reset — see Settings → Cloud Sync.)</p>
+          <div><label class="lbl">Email</label><input id="forgotEmail" type="email" required class="inp" placeholder="you@example.com"></div>
+          <div id="forgotStep2" class="hidden space-y-4">
+            <div><label class="lbl">New password (min 6 characters)</label><input id="forgotNewPass" type="password" required minlength="6" class="inp" placeholder="New password"></div>
+          </div>
+          <p id="forgotError" class="err hidden"></p>
+          <button class="btn-primary w-full" type="submit">Continue</button>
+          <button id="forgotBack" class="link w-full text-center" type="button">← Back to Sign In</button>
+        </form>
+      </section>
+    </div>
+    <p class="text-center text-xs text-slate-400 mt-10">SaveBox v1.5.5 • Free • Cloud files on MEGA (20 GB free) once you connect it.</p>
+  </div>
+</div>
+
+<!-- ======================= APP SHELL ======================= -->
+<div id="appView" class="hidden min-h-screen">
+  <div class="flex">
+    <!-- Sidebar (desktop) -->
+    <aside class="app-sidebar hidden lg:flex flex-col w-64 shrink-0 min-h-screen sticky top-0 h-screen bg-white dark:bg-[#0E2233] border-r border-slate-200 dark:border-slate-800 p-4">
+      <div class="flex items-center gap-2 px-2 py-2">
+        <span id="logoSide"></span>
+        <span class="text-xl font-extrabold text-navy dark:text-white">Save<span class="text-electric">Box</span></span>
+        <span class="ml-auto text-[10px] font-bold bg-gold/20 text-yellow-700 dark:text-gold px-2 py-0.5 rounded-full">v1.5.5</span>
+      </div>
+      <button id="sideSaveBtn" class="btn-primary w-full mt-4">＋ Save Link</button>
+      <button id="sideUploadBtn" class="btn-outline w-full mt-2">⬆ Upload File</button>
+      <nav id="sideNav" class="mt-6 space-y-1 text-[15px]"></nav>
+      <div class="mt-auto">
+        <div class="flex items-center gap-2 mt-3 px-1">
+          <span id="sideAvatar" class="avatar"></span>
+          <div class="min-w-0"><p id="sideUserName" class="font-semibold truncate text-sm"></p><p id="sideUserEmail" class="text-xs text-slate-500 truncate"></p></div>
+          <button id="sideLogout" class="ml-auto text-slate-400 hover:text-red-500" title="Sign out">⎋</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main column -->
+    <div class="flex-1 min-w-0 flex flex-col">
+      <header class="app-topbar sticky top-0 z-30 bg-mist/90 dark:bg-[#0B1B2B]/90 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 py-3">
+        <div class="flex items-center gap-3 max-w-6xl mx-auto">
+          <span class="lg:hidden flex items-center gap-2"><span id="logoTop"></span><b class="text-navy dark:text-white">SaveBox</b></span>
+          <div class="relative flex-1 max-w-xl mx-auto w-full">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+            <input id="globalSearch" class="inp pl-9 w-full" type="search" placeholder="Search files, links, notes, tags…" autocomplete="off">
+          </div>
+          <button id="themeBtn" class="btn-ghost" type="button" title="Toggle theme">🌙</button>
+          <button id="headerAvatar" class="avatar" type="button" title="Profile & Settings"></button>
+        </div>
+      </header>
+
+      <main class="flex-1 px-4 pb-28 lg:pb-10 pt-5">
+        <div id="view" class="max-w-6xl mx-auto"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Bottom nav (mobile) -->
+  <nav id="bottomNav" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#0E2233] border-t border-slate-200 dark:border-slate-800 flex justify-around py-1.5 text-[11px]"></nav>
+</div>
+
+<!-- ======================= MODALS ======================= -->
+<div id="modalRoot"></div>
+<div id="previewRoot"></div>
+<div id="lockRoot"></div>
+<div id="toastRoot" class="fixed bottom-20 lg:bottom-6 right-4 z-[100] space-y-2 w-[calc(100%-2rem)] max-w-sm"></div>
+<input type="file" id="hiddenFileInput" class="hidden" multiple>
+<input type="file" id="photoInput" class="vh-input" accept="image/*" tabindex="-1" aria-hidden="true">
+
+<!-- Firebase SDK (compat v10) — only used when a real config is pasted into js/firebase-config.js -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/firebase.js"></script>
+<script src="js/r2-config.js"></script>
+<script src="js/r2.js"></script>
+<!-- MEGA cloud files (v1.4.0): vendor bundles are local, no CDN dependency -->
+<script src="js/mega-config.js"></script>
+<script src="js/buffer-vendor.js"></script>
+<script src="js/mega-vendor.js"></script>
+<script src="js/mega.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
